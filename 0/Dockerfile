@@ -9,13 +9,13 @@ ADD https://raw.githubusercontent.com/lambdaconservatory/scheme-release-archive/
 RUN sha256sum minischeme.tar.gz && sha256sum -c checksum
 RUN mkdir minischeme && tar -C minischeme --strip-components 1 -xf minischeme.tar.gz
 WORKDIR /build/minischeme
-RUN mv makefile Makefile
-RUN make
+RUN sed -i 's@"init.scm"@"/usr/local/share/miniscm/init.scm"@' miniscm.c
+RUN cc -D BSD -o miniscm miniscm.c
 RUN mkdir /usr/local/share/miniscm \
- && install -m 755 miniscm  /usr/local/share/miniscm/ \
- && install -m 644 init.scm /usr/local/share/miniscm/
+ && install -m 755 miniscm /usr/local/bin/ \
+ && install -m 644 *.scm /usr/local/share/miniscm/
 
 FROM debian:buster-slim
 COPY --from=build /usr/local/ /usr/local/
-COPY scheme-banner /usr/local/bin/
+RUN ln -s miniscm /usr/local/bin/scheme-banner
 CMD ["scheme-banner"]
